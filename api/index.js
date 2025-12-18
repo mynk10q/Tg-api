@@ -22,16 +22,32 @@ export default async function handler(req, res) {
 
     const text = await r.text();
 
+    let data;
     try {
-      const data = JSON.parse(text);
-      data.Developer = "@mynk_mynk_mynk | Mynk";
-      return res.status(200).json(data);
+      data = JSON.parse(text);
     } catch {
-      res.setHeader("Content-Type", "application/json");
-      return res.status(200).send(
-        text + `\n\n"Developer": "@mynk_mynk_mynk | Mynk"`
-      );
+      return res.status(200).json({
+        status: "error",
+        message: "Invalid backend response",
+        Developer: "@mynk_mynk_mynk | Mynk"
+      });
     }
+
+    // 🔥 REMOVE / OVERRIDE developer from inside result
+    if (Array.isArray(data.result)) {
+      data.result = data.result.map(item => {
+        delete item.Developer; // ❌ remove cutehack
+        return {
+          ...item,
+          Developer: "@mynk_mynk_mynk | Mynk" // ✅ add yours
+        };
+      });
+    }
+
+    // 🔥 Root level developer
+    data.Developer = "@mynk_mynk_mynk | Mynk";
+
+    return res.status(200).json(data);
 
   } catch (err) {
     return res.status(500).json({
